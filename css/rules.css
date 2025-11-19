@@ -1,42 +1,52 @@
 
 :root {
 
-  /* 常用 */
+  /* 基础色板 */
   --white-color: #fff;
   --black-color: #000;
-  --blue-color: #165dff;
+  --blue-color: #4fb7ff;
+
+  --primary-color: #64d0ff;
+  --secondary-color: #ff9de2;
+  --theme-color: #ffe66d;
+  --surface-color: rgba(255, 255, 255, 0.08);
+  --surface-strong: rgba(255, 255, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --text-color: #e3e8ff;
 
   --app-width: 100vw;
   --app-height: 100vh;
 
-  --color-1: #3c3c3c;
-  --color-2: #1D2129;
-  --color-3: #4E5969;
-  --color-4: #f2f3f5;
-  --color-5: #c9cdd4;
-  --color-6: #e5e6eb;
-  --color-7: #f1f2f3;
-  --color-8: #f2f3f5;
-  --color-9: #d1d5db;
-  --color-10: #c9cdc4;
-  --color-11: #e0e0e3;
-  --color-12: #5f99d8;
-  --color-13: #cbd1d8;
-  --color-14: #ccc;
-  --color-15: rgba(0, 0, 0, 0.1);
-  --color-16: #f6f6f6;
-  --color-17: rgba(229, 230, 235, .9);
-  --color-18: #ebecee;
-  --color-19:#f5f5f5;
-  --color-20:#222222;
-  --color-21:#c7cdd4;
-  --color-22:#dcdad7;
-  --color-23:rgba(150,150,150,.16);
+  --color-1: #f5f5f7;
+  --color-2: #d7def0;
+  --color-3: #b5c4f3;
+  --color-4: rgba(255, 255, 255, 0.08);
+  --color-5: rgba(255, 255, 255, 0.18);
+  --color-6: rgba(255, 255, 255, 0.24);
+  --color-7: rgba(255, 255, 255, 0.32);
+  --color-8: rgba(255, 255, 255, 0.4);
+  --color-9: #91a0ff;
+  --color-10: #7a8fe4;
+  --color-11: rgba(255, 255, 255, 0.16);
+  --color-12: #64d0ff;
+  --color-13: rgba(100, 208, 255, 0.35);
+  --color-14: rgba(255, 255, 255, 0.2);
+  --color-15: rgba(0, 0, 0, 0.25);
+  --color-16: rgba(255, 255, 255, 0.06);
+  --color-17: rgba(16, 24, 48, 0.76);
+  --color-18: rgba(21, 29, 54, 0.9);
+  --color-19: rgba(255, 255, 255, 0.08);
+  --color-20: #fefefe;
+  --color-21: rgba(255, 255, 255, 0.28);
+  --color-22: rgba(255, 255, 255, 0.12);
+  --color-23: rgba(255, 255, 255, 0.15);
 
-  /* 左 side */
+  --aurora-a: rgba(93, 95, 239, 0.65);
+  --aurora-b: rgba(54, 209, 220, 0.55);
+  --aurora-c: rgba(255, 141, 211, 0.45);
+
+  /* 布局尺寸 */
   --side-width: 250px;
-
-
   --z-index-0: 0;
   --z-index-1: 10;
   --z-index-2: 20;
@@ -44,10 +54,8 @@
   --z-index-4: 40;
   --z-index-5: 50;
 
-
   /* header */
   --header-height: 60px;
-
 
   /* footer */
   --footer-height: 100px;
