@@ -11,28 +11,25 @@ import { lyricsList2 } from './musicLyrics2.js';
  * 主要功能：
  * 1. 歌词解析：支持两种不同格式的歌词解析
  * 2. 歌词渲染：将歌词文本渲染到DOM中
- * 3. 歌词滚动：支持自动滚动和手动滚动
- * 4. 交互控制：支持点击跳转和滚轮控制
+ * 3. 歌词滚动：根据播放进度自动滚动，当前行居中显示
+ * 4. 歌词高亮：当前播放行高亮显示
  */
 export class LyricsManager {
     /**
      * 初始化歌词管理器
-     * 设置基础属性、DOM元素、样式和事件监听
      */
     constructor() {
         // 歌词数据相关属性
         this.currentLyrics = [];      // 当前歌词文本数组
-        this.timeouts = [];          // 歌词滚动计时器数组
-        this.timerArray = [];        // 歌词时间点数组
-        this.currentIndex = 0;       // 当前播放的歌词索引 
+        this.timerArray = [];         // 歌词时间点数组
+        this.currentIndex = -1;       // 当前播放的歌词索引
 
         // 滚动控制相关属性
-        this.lineHeight = 80;        // 每行歌词的高度
-        this.isAutoScrolling = true; // 自动滚动标志
-        this.scrollTimer = null;     // 滚动定时器
-        this.lastWheelTime = 0;      // 上次滚轮事件时间
-        this.wheelThreshold = 50;    // 滚轮事件节流阈值（毫秒）
-        this.currentScrollTop = 0;   // 当前滚动位置
+        this.lineHeight = 0;          // 每行歌词的实际高度（动态计算）
+        this.isAutoScrolling = true;  // 自动滚动标志
+        this.scrollTimer = null;      // 滚动定时器
+        this.lastWheelTime = 0;       // 上次滚轮事件时间
+        this.wheelThreshold = 50;     // 滚轮事件节流阈值（毫秒）
 
         // DOM 元素
         this.initDOMElements();
@@ -44,12 +41,13 @@ export class LyricsManager {
         this.bindEvents();
 
         // 回调函数
-        this.onTimeUpdate = null;    // 时间更新回调函数
+        this.onTimeUpdate = null;     // 时间更新回调函数
     }
+
     /**
- * 初始化DOM元素并设置基础样式
- * @private
- */
+     * 初始化DOM元素并设置基础样式
+     * @private
+     */
     initDOMElements() {
         this.lyricsContainer = document.querySelector('[play-lyrics]');
         this.wrapLyrics = document.querySelector('[wrap-lyrics]');
@@ -79,6 +77,42 @@ export class LyricsManager {
             }
         };
     }
+
+    /**
+     * 计算实际的歌词行高度
+     * @private
+     */
+    calculateLineHeight() {
+        if (!this.lyricsContainer || !this.wrapLyrics) {
+            this.lineHeight = 30; // 默认值
+            return;
+        }
+
+        // 如果已经有歌词行，直接测量第一行
+        const firstLine = this.lyricsContainer.querySelector('.lyric:not(.padding)');
+        if (firstLine) {
+            const rect = firstLine.getBoundingClientRect();
+            this.lineHeight = rect.height;
+            if (this.lineHeight > 0 && this.lineHeight < 200) {
+                return; // 使用测量到的值
+            }
+        }
+
+        // 如果没有歌词行，创建临时元素测量
+        const tempLine = document.createElement('div');
+        tempLine.className = 'lyric';
+        tempLine.innerHTML = '<span>测试行</span>';
+        tempLine.style.visibility = 'hidden';
+        tempLine.style.position = 'absolute';
+        tempLine.style.top = '-9999px';
+        
+        this.wrapLyrics.appendChild(tempLine);
+        const height = tempLine.offsetHeight;
+        this.wrapLyrics.removeChild(tempLine);
+        
+        this.lineHeight = height > 0 && height < 200 ? height : 30;
+    }
+
     /**
      * 绑定歌词相关事件
      */
@@ -90,10 +124,10 @@ export class LyricsManager {
 
         // 鼠标滚轮控制
         addEventListeners(this.wrapLyrics, {
-            'wheel': (e) => this.handleScroll(e),
-            'scroll': (e) => this.handleScrollEnd(e)
+            'wheel': (e) => this.handleScroll(e)
         });
     }
+
     /**
      * 加载歌词
      * @param {Object} musicData - 音乐数据对象
@@ -110,7 +144,6 @@ export class LyricsManager {
             this.currentLyrics = ['纯音乐请欣赏。'];
             this.timerArray = [0];
             this.render();
-            this.scrollToActiveLine(false);
             return;
         }
 
@@ -120,10 +153,10 @@ export class LyricsManager {
         } else if (musicData.type_load_lyrics === CONFIG.LOAD_LYRICS_TYPE.TYPE_2) {
             lyrics = this.parseLyricsType2(musicData);
         } else if (musicData.type_load_lyrics === CONFIG.LOAD_LYRICS_TYPE.TYPE_file) {
-            if(musicData.lyrics_path && musicData.lyrics_path.trim() !== ''){
+            if (musicData.lyrics_path && musicData.lyrics_path.trim() !== '') {
                 lyrics = await this.parseLyricsType3(musicData);
-            }else{
-                lyrics = ""
+            } else {
+                lyrics = null;
             }
         }
 
@@ -131,14 +164,15 @@ export class LyricsManager {
             this.currentLyrics = lyrics.text;
             this.timerArray = lyrics.timer;
             this.render();
-            this.scrollToCenter(0, false);
+            this.currentIndex = -1; // 重置索引
         } else {
             this.currentLyrics = ['暂无歌词提供。'];
             this.timerArray = [0];
             this.render();
-            this.scrollToActiveLine(false);
+            this.currentIndex = -1;
         }
     }
+
     /**
      * 解析第一种格式的歌词
      */
@@ -162,6 +196,7 @@ export class LyricsManager {
 
         return { text: lyricsText, timer: lyricsTimer };
     }
+
     /**
      * 解析第二种格式的歌词
      */
@@ -195,6 +230,7 @@ export class LyricsManager {
             timer: lyricsData.map(line => line.time)
         };
     }
+
     /**
      * 解析第三种格式的歌词
      */
@@ -252,15 +288,16 @@ export class LyricsManager {
         }
     }
 
-
     /**
      * 渲染歌词
      */
     render() {
         if (!this.lyricsContainer) return;
 
-        // 添加空白行以确保第一行和最后一行也能滚动到中间
-        const paddingLines = Math.floor(this.wrapLyrics.clientHeight / (2 * this.lineHeight));
+        // 计算需要添加的填充行数（使第一行和最后一行也能居中）
+        const containerHeight = this.wrapLyrics ? this.wrapLyrics.clientHeight : 400;
+        const estimatedLineHeight = 30; // 临时估算值
+        const paddingLines = Math.ceil(containerHeight / (2 * estimatedLineHeight));
 
         // 构建歌词HTML
         const lyricsHTML = [
@@ -268,9 +305,7 @@ export class LyricsManager {
             ...Array(paddingLines).fill('<div class="lyric padding"><span></span></div>'),
             // 实际歌词
             ...this.currentLyrics.map((text, index) => `
-                <div id="line-${index + 1}" 
-                     data-time="${this.timerArray[index] || 0}" 
-                     class="lyric ${index === 0 ? "active" : ""}">
+                <div class="lyric" data-index="${index}" data-time="${this.timerArray[index] || 0}">
                     <span>${text}</span>
                 </div>
             `),
@@ -279,28 +314,42 @@ export class LyricsManager {
         ].join('');
 
         this.lyricsContainer.innerHTML = lyricsHTML;
+
+        // 渲染后重新计算行高
+        setTimeout(() => {
+            this.calculateLineHeight();
+        }, 50);
     }
 
     /**
-   * 更新歌词滚动
-   * @param {number} currentTime - 当前播放时间
-   */
+     * 更新歌词滚动和高亮
+     * @param {number} currentTime - 当前播放时间
+     */
     update(currentTime) {
-        if (!this.timerArray.length) return;
+        if (!this.timerArray.length || !this.lyricsContainer) return;
+
         // 查找当前应该显示的歌词索引
-        let currentIndex = this.timerArray.findIndex(time => time > currentTime) - 1;
+        // 找到最后一个时间点 <= currentTime 的索引
+        let currentIndex = -1;
+        for (let i = this.timerArray.length - 1; i >= 0; i--) {
+            if (this.timerArray[i] <= currentTime) {
+                currentIndex = i;
+                break;
+            }
+        }
 
         // 处理边界情况
-        if (currentIndex === -2) { // findIndex 返回 -1 时
-            currentIndex = this.timerArray.length - 1;
-        } else if (currentIndex === -1) { // 第一句歌词之前
+        if (currentIndex === -1) {
             currentIndex = 0;
         }
-        // 只有当索引变化时才更新
+
+        // 确保索引在有效范围内
+        currentIndex = Math.max(0, Math.min(currentIndex, this.timerArray.length - 1));
+
+        // 如果索引变化了，更新高亮和滚动
         if (currentIndex !== this.currentIndex) {
             this.currentIndex = currentIndex;
-            this.updateActiveLine(currentIndex);
-            // 只有在自动滚动模式下才滚动到中间
+            this.updateHighlight(currentIndex);
             if (this.isAutoScrolling) {
                 this.scrollToCenter(currentIndex);
             }
@@ -308,104 +357,80 @@ export class LyricsManager {
     }
 
     /**
+     * 更新高亮状态
+     * @param {number} index - 歌词索引（实际歌词索引，不包括padding）
+     */
+    updateHighlight(index) {
+        if (!this.lyricsContainer) return;
+
+        const lines = this.lyricsContainer.querySelectorAll('.lyric:not(.padding)');
+        if (!lines || lines.length === 0) return;
+
+        // 确保索引在有效范围内
+        const validIndex = Math.max(0, Math.min(index, lines.length - 1));
+
+        // 移除所有active类，然后添加当前行的active类
+        lines.forEach((line, i) => {
+            if (i === validIndex) {
+                line.classList.add('active');
+            } else {
+                line.classList.remove('active');
+            }
+        });
+    }
+
+    /**
      * 将指定行滚动到中间
-     * @param {number} index - 歌词索引
+     * @param {number} index - 歌词索引（实际歌词索引，不包括padding）
      * @param {boolean} smooth - 是否使用平滑滚动
      */
     scrollToCenter(index, smooth = true) {
         if (!this.lyricsContainer || !this.wrapLyrics) return;
 
-        // 考虑顶部填充的行数
-        const paddingLines = Math.floor(this.wrapLyrics.clientHeight / (2 * this.lineHeight));
-        const adjustedIndex = index + paddingLines;
+        // 获取所有实际的歌词行（不包括padding）
+        const lines = this.lyricsContainer.querySelectorAll('.lyric:not(.padding)');
+        if (!lines || lines.length === 0) return;
 
+        // 确保索引在有效范围内
+        const validIndex = Math.max(0, Math.min(index, lines.length - 1));
+        const targetLine = lines[validIndex];
+        if (!targetLine) return;
+
+        // 获取目标行的实际位置（相对于 lyricsContainer）
+        const targetLineOffsetTop = targetLine.offsetTop;
+        
+        // 获取目标行的实际高度
+        const targetLineHeight = targetLine.offsetHeight;
+        
+        // 获取容器高度
         const containerHeight = this.wrapLyrics.clientHeight;
+        
+        // 计算目标偏移量，使目标行的中心点对齐到容器的中心点
+        const targetOffset = targetLineOffsetTop + targetLineHeight / 2 - containerHeight / 2;
+
+        // 获取内容总高度
         const totalHeight = this.lyricsContainer.scrollHeight;
 
-        // 计算目标偏移量，使当前行居中显示
-        let targetOffset = (adjustedIndex * this.lineHeight) - (containerHeight / 2) + (this.lineHeight / 2);
-
         // 确保不会超出边界
-        targetOffset = Math.max(0, Math.min(targetOffset, totalHeight - containerHeight));
-
-        // 更新当前滚动位置
-        this.currentScrollTop = targetOffset;
+        const finalOffset = Math.max(0, Math.min(targetOffset, totalHeight - containerHeight));
 
         // 应用滚动
         this.lyricsContainer.style.transition = smooth ? 'transform 0.3s ease-out' : 'none';
-        this.lyricsContainer.style.transform = `translateY(-${targetOffset}px)`;
+        this.lyricsContainer.style.transform = `translateY(-${finalOffset}px)`;
     }
 
     /**
-     * 滚动到活动行
-     * @param {boolean} smooth - 是否使用平滑滚动
+     * 处理歌词点击
      */
-    scrollToActiveLine(smooth = true) {
-        if (!this.lyricsContainer || !this.wrapLyrics) return;
-
-        const containerHeight = this.wrapLyrics.clientHeight;
-        const totalHeight = this.currentLyrics.length * this.lineHeight;
-
-        // 计算目标偏移量，使当前行居中显示
-        let targetOffset = (this.currentIndex * this.lineHeight) - (containerHeight / 2) + (this.lineHeight / 2);
-
-        // 确保不会超出边界
-        targetOffset = Math.max(0, Math.min(targetOffset, totalHeight - containerHeight));
-
-        // 应用滚动
-        this.lyricsContainer.style.transition = smooth ? 'transform 0.3s ease-out' : 'none';
-        this.lyricsContainer.style.transform = `translateY(-${targetOffset}px)`;
-    }
-    /**
-     * 滚动到指定行
-     */
-    scrollToLine(index) {
-        if (index < 0 || !this.lyricsContainer) return;
-
-        const lineHeight = 80; // 每行歌词的高度
-        const containerHeight = this.wrapLyrics.clientHeight;
-        const maxScroll = (this.currentLyrics.length - 1) * lineHeight;
-
-        // 计算目标偏移量，使当前行居中显示
-        let offset = (lineHeight * index) - (containerHeight / 2) + (lineHeight / 2);
-
-        // 确保不会超出边界
-        offset = Math.max(0, Math.min(offset, maxScroll));
-
-        // 使用 transform 进行平滑滚动
-        this.lyricsContainer.style.transition = 'transform 0.3s ease-out';
-        this.lyricsContainer.style.transform = `translateY(-${offset}px)`;
-    }
-
-    /**
-     * 更新活动行样式
-     */
-    updateActiveLine(index) {
-        if (!this.lyricsContainer) return;
-
-        // 考虑顶部填充的行数
-        const paddingLines = Math.floor(this.wrapLyrics.clientHeight / (2 * this.lineHeight));
-        const adjustedIndex = index + paddingLines;
-
-        const lines = this.lyricsContainer.children;
-        Array.from(lines).forEach((line, i) => {
-            line.classList.toggle('active', i === adjustedIndex);
-        });
-    }
-
-    /**
-    * 处理歌词点击
-    */
     handleLyricClick(e) {
         const line = e.target.closest('.lyric');
         if (!line || line.classList.contains('padding')) return;
 
+        const index = parseInt(line.dataset.index);
+        if (isNaN(index)) return;
+
         const time = parseFloat(line.dataset.time);
         if (isNaN(time)) return;
-
-        // 考虑填充行的偏移
-        const paddingLines = Math.floor(this.wrapLyrics.clientHeight / (2 * this.lineHeight));
-        const index = Array.from(this.lyricsContainer.children).indexOf(line) - paddingLines;
 
         this.currentIndex = index;
         this.isAutoScrolling = true;
@@ -414,7 +439,7 @@ export class LyricsManager {
             this.onTimeUpdate(time);
         }
 
-        this.updateActiveLine(index);
+        this.updateHighlight(index);
         this.scrollToCenter(index);
     }
 
@@ -434,22 +459,6 @@ export class LyricsManager {
         // 暂时禁用自动滚动
         this.isAutoScrolling = false;
 
-        // 计算新的滚动位置
-        const scrollStep = 160;  // 每次滚动的步长
-        const deltaY = e.deltaY > 0 ? scrollStep : -scrollStep;
-        this.currentScrollTop += deltaY;
-
-        // 获取容器和内容的高度
-        const containerHeight = this.wrapLyrics.clientHeight;
-        const contentHeight = this.lyricsContainer.scrollHeight;
-
-        // 限制滚动范围
-        this.currentScrollTop = Math.max(0, Math.min(this.currentScrollTop, contentHeight - containerHeight));
-
-        // 应用滚动
-        this.lyricsContainer.style.transition = 'transform 0.3s ease-out';
-        this.lyricsContainer.style.transform = `translateY(-${this.currentScrollTop}px)`;
-
         // 清除之前的定时器
         if (this.scrollTimer) {
             clearTimeout(this.scrollTimer);
@@ -458,35 +467,21 @@ export class LyricsManager {
         // 3秒后恢复自动滚动
         this.scrollTimer = setTimeout(() => {
             this.isAutoScrolling = true;
-            // 获取当前最接近的歌词索引
-            const currentIndex = Math.floor(this.currentScrollTop / this.lineHeight);
-            this.scrollToCenter(currentIndex);
+            // 恢复到当前播放行
+            if (this.currentIndex >= 0) {
+                this.scrollToCenter(this.currentIndex);
+            }
         }, 3000);
-    }
-
-    /**
-     * 处理滚动结束
-     */
-    handleScrollEnd(e) {
-        if (this.scrollTimer) {
-            clearTimeout(this.scrollTimer);
-        }
-
-        this.scrollTimer = setTimeout(() => {
-            this.scrollToLine(this.currentIndex - 1);
-        }, this.config.transition.delay);
     }
 
     /**
      * 清除所有计时器
      */
     clear() {
-        this.timeouts.forEach(clearTimeout);
-        this.timeouts = [];
         this.currentLyrics = [];
         this.timerArray = [];
-        this.currentIndex = 0;
-        this.currentScrollTop = 0;  // 重置滚动位置
+        this.currentIndex = -1;
+        this.lineHeight = 0;
 
         if (this.lyricsContainer) {
             this.lyricsContainer.style.transform = 'translateY(0)';
@@ -495,6 +490,7 @@ export class LyricsManager {
 
         if (this.scrollTimer) {
             clearTimeout(this.scrollTimer);
+            this.scrollTimer = null;
         }
         this.isAutoScrolling = true; // 重置自动滚动标志
     }

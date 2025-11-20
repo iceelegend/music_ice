@@ -75,7 +75,7 @@
 
                         <!-- 面板主要内容 -->
                         <div class="panel-content flex">
-                            <!-- 左侧歌曲信息 -->
+                            <!-- 歌曲信息区域 -->
                             <div class="content-left flex">
                                 <div class="left-songInfo flex">
                                     <div class="songInfo-img flex">
@@ -87,68 +87,15 @@
                                                 <span title="" class="name text-ol fs-20 fw-6"
                                                     currentPlay-name></span>
                                             </div>
-                                            <div class="song-author">
-                                                <span title="" class="author text-ol fw-6 fs-16"
-                                                    currentPlay-author></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 播放控制区域 -->
-                                <div class="left-playControl">
-                                    <!-- 进度条 -->
-                                    <div class="playControl-progressBar flex">
-                                        <span class="text-ol currentTime" play-currentTime>00:00</span>
-                                        <div class="progressBar">
-                                            <input type="range" play-Progress min="0" max="100" value="0" step="1"
-                                                aria-label="歌曲进度">
-                                            <div class="progress-colorFill" play-colorFill></div>
-                                        </div>
-                                        <span class="text-ol totalTime" play-totalTime>00:00</span>
-                                    </div>
-
-                                    <!-- 播放控制按钮 -->
-                                    <div class="playControl-function flex">
-                                        <!-- 上一首 -->
-                                        <div class="function-prevSong flex">
-                                            <span class="prevSong-icon flex" play-prev-btn>
-                                                <svg fill="none" stroke="currentColor" class="icon" stroke-width="5"
-                                                    stroke-linecap="butt" stroke-linejoin="miter">
-                                                    <use xlink:href="#icon-prev"></use>
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <!-- 播放/暂停 -->
-                                        <div class="function-Play flex">
-                                            <span class="Play-icon flex pause" play-btn>
-                                                <svg fill="none" stroke="currentColor" class="icon pause"
-                                                    stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter">
-                                                    <use xlink:href="#icon-play"></use>
-                                                </svg>
-                                                <svg fill="none" stroke="currentColor" class="icon playing"
-                                                    stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter">
-                                                    <use xlink:href="#icon-pause"></use>
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <!-- 下一首 -->
-                                        <div class="function-nextSong flex">
-                                            <span class="nextSong-icon flex" play-next-btn>
-                                                <svg fill="none" stroke="currentColor" class="icon" stroke-width="5"
-                                                    stroke-linecap="butt" stroke-linejoin="miter">
-                                                    <use xlink:href="#icon-next"></use>
-                                                </svg>
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 右侧歌词显示 -->
+                            <!-- 歌词显示 -->
                             <div class="content-right">
                                 <div class="right-wrap" wrap-lyrics>
-                                    <div class="wrap-lyrics fs-30 fw-5" play-lyrics>
+                                    <div class="wrap-lyrics" play-lyrics>
                                         <!-- 歌词内容将通过JavaScript动态插入 -->
                                     </div>
                                 </div>
