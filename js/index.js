@@ -27,10 +27,8 @@ const state = {
  */
 const elements = {
   // 播放信息相关元素
-  currentPlayImg70: $$('[currentPlay-img70]'),
   currentPlayImg400: Array.from($$('[currentPlay-img400]')),
   currentPlayName: $$('[currentPlay-name]'),
-  currentPlayAuthor: $$('[currentPlay-author]'),
 
   // 进度条相关元素
   playProgress: $$("[play-Progress]"),
@@ -57,10 +55,8 @@ const elements = {
 
   // 播放元素组
   playElements: [
-    $$('[currentPlay-img70]'),
     Array.from($$('[currentPlay-img400]')),
-    $$('[currentPlay-name]'),
-    $$('[currentPlay-author]')
+    $$('[currentPlay-name]')
   ]
 };
 
@@ -493,15 +489,28 @@ const playlistControl = {
 
     elements.playElements.forEach((elementGroup, index) => {
       elementGroup.forEach(element => {
-        if (index <= 1) {
+        if (index === 0) {
+          // 更新图片
           element.src = currentMusic.imgPath;
           element.alt = '...';
-        } else if (index === 2) {
+        } else if (index === 1) {
+          // 更新歌曲名称
           element.textContent = currentMusic.title;
           element.title = currentMusic.title;
-        } else {
-          element.textContent = currentMusic.author;
-          element.title = currentMusic.author;
+          
+          // 检测文本是否溢出，如果溢出则添加跑马灯效果
+          setTimeout(() => {
+            const songNameContainer = element.closest('.song-name');
+            if (songNameContainer) {
+              const containerWidth = songNameContainer.offsetWidth;
+              const textWidth = element.scrollWidth;
+              if (textWidth > containerWidth) {
+                songNameContainer.classList.add('marquee');
+              } else {
+                songNameContainer.classList.remove('marquee');
+              }
+            }
+          }, 100);
         }
       });
     });
@@ -620,7 +629,7 @@ function initEventListeners() {
   });
   elements.volumeIcon.addEventListener("click", volumeControl.toggleMute.bind(volumeControl));
 
-  // 使用防抖处理悬浮窗显示
+  // 使用防抖处理悬浮窗显示，并支持取消
   const debouncedShowHover = debounce(showHoverWindow, 50);
 
   // 修改列表事件监听方式
@@ -636,8 +645,48 @@ function initEventListeners() {
       }
     });
 
+    // 当鼠标离开歌单列表容器时，立即隐藏浮窗并取消防抖
+    contentList.addEventListener('mouseleave', (e) => {
+      // 取消防抖函数，防止延迟执行
+      if (debouncedShowHover.cancel) {
+        debouncedShowHover.cancel();
+      }
+      hideHoverWindow();
+    });
+
     contentList.addEventListener('scroll', playlistControl.handleScroll);
     contentList.addEventListener('dblclick', playlistControl.playSelectMusic.bind(playlistControl));
+  }
+
+  // 全局鼠标移动检测：如果鼠标不在歌单列表内，隐藏浮窗
+  document.addEventListener('mousemove', (e) => {
+    const contentList = document.querySelector('.wrapper-contentList');
+    if (!contentList) {
+      hideHoverWindow();
+      return;
+    }
+    
+    // 检查鼠标是否在歌单列表容器内
+    const isInContentList = contentList.contains(e.target) || e.target.closest('.wrapper-contentList');
+    if (!isInContentList) {
+      hideHoverWindow();
+    }
+  });
+
+  // 当鼠标进入歌词面板或底部播放面板时，隐藏浮窗
+  const layoutRight = document.querySelector('.layout-right');
+  const appFooter = document.querySelector('.app_footer');
+  
+  if (layoutRight) {
+    layoutRight.addEventListener('mouseenter', () => {
+      hideHoverWindow();
+    });
+  }
+  
+  if (appFooter) {
+    appFooter.addEventListener('mouseenter', () => {
+      hideHoverWindow();
+    });
   }
 
   // 添加全局鼠标事件监听
@@ -721,12 +770,25 @@ function showHoverWindow(event) {
     return;
   }
 
-  // 清空之前的内容，设置新内容
-  hoverContent.innerHTML = '';
+  // 再次检查是否还在列表项内（防止防抖延迟导致的问题）
+  const currentItem = event.target.closest('.contentList-item');
+  if (!currentItem) {
+    hideHoverWindow();
+    return;
+  }
+
+  // 再次检查是否有描述信息
+  if (!musicData?.des || musicData.des.trim() === '') {
+    hideHoverWindow();
+    return;
+  }
+
+  // 设置新内容
   hoverContent.innerHTML = musicData.des.replace(/\n/g, '<br>');
 
   // 计算悬浮窗位置，考虑导航栏和底部控制栏
   const hoverWindowWidth = 300;
+  // 先设置内容，再获取高度
   const hoverWindowHeight = hoverWindow.offsetHeight;
   const windowWidth = window.innerWidth;
 
@@ -751,8 +813,14 @@ function showHoverWindow(event) {
   hoverWindow.style.left = `${Math.max(10, left)}px`;
   hoverWindow.style.top = `${top}px`;
 
+  // 只有在所有检查都通过后，才显示浮窗
   requestAnimationFrame(() => {
-    hoverWindow.classList.add('visible');
+    // 再次确认内容不为空
+    if (hoverContent.innerHTML.trim() !== '') {
+      hoverWindow.classList.add('visible');
+    } else {
+      hoverWindow.classList.remove('visible');
+    }
   });
 }
 
@@ -774,7 +842,7 @@ function hideHoverWindow() {
 // 使用防抖优化鼠标移动事件
 function debounce(func, wait) {
   let timeout;
-  return function executedFunction(...args) {
+  const executedFunction = function(...args) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
@@ -782,6 +850,11 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
   };
+  // 添加取消方法
+  executedFunction.cancel = function() {
+    clearTimeout(timeout);
+  };
+  return executedFunction;
 }
 
 /**

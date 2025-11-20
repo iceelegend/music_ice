@@ -2,13 +2,13 @@
 #app {
 	height: 100vh;
 	width: 100%;
-	max-width: 1400px;
+	max-width: 1600px;
 	margin: 0 auto;
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	gap: 0;
-	padding: 32px 48px 140px;
+	padding: 24px 32px 140px;
 	box-sizing: border-box;
 }
 
@@ -26,11 +26,11 @@
 .layout-left,
 .layout-right {
 	border-radius: 32px;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	background: rgba(255, 255, 255, 0.05);
-	box-shadow: 0 25px 60px rgba(26, 8, 0, 0.45);
-	-webkit-backdrop-filter: blur(24px);
-	backdrop-filter: blur(24px);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: rgba(255, 255, 255, 0.02);
+	box-shadow: 0 25px 60px rgba(26, 8, 0, 0.3);
+	-webkit-backdrop-filter: blur(20px);
+	backdrop-filter: blur(20px);
 	display: flex;
 	flex-direction: column;
 	position: relative;
@@ -86,13 +86,13 @@
 	bottom: 24px;
 	left: 50%;
 	transform: translateX(-50%);
-	width: min(1280px, calc(100% - 48px));
+	width: min(1500px, calc(100% - 64px));
 	height: 88px;
-	background: rgba(40, 14, 0, 0.85);
-	border: 1px solid rgba(255, 255, 255, 0.15);
-	box-shadow: 0 30px 60px rgba(15, 4, 0, 0.7);
-	-webkit-backdrop-filter: blur(20px);
-	backdrop-filter: blur(20px);
+	background: rgba(40, 14, 0, 0.5);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	box-shadow: 0 30px 60px rgba(15, 4, 0, 0.5);
+	-webkit-backdrop-filter: blur(18px);
+	backdrop-filter: blur(18px);
 	border-radius: 24px;
 	padding: 0 32px;
 	z-index: var(--z-index-3);
@@ -107,47 +107,6 @@
 	gap: 32px;
 }
 
-/* -------- 播放信息区域 -------- */
-.songs_play .play-info {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	min-width: 160px;
-}
-
-/* 歌曲封面 */
-.play-info .info-content .info-avatar,
-.play-info .info-content .avatar-img {
-	display: none;
-}
-
-/* 歌曲信息 */
-.play-info .info-content .info-items {
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 4px;
-}
-
-.play-info .items-name {
-	max-width: 240px;
-	font-size: 16px;
-	font-weight: 600;
-}
-
-.play-info .items-name span {
-	color: var(--white-color) !important;
-}
-
-.play-info .items-author {
-	cursor: default;
-	font-size: 12px;
-	opacity: 0.85;
-}
-
-.play-info .items-author span {
-	color: var(--white-color) !important;
-	opacity: 0.85;
-}
 
 /* -------- 播放控制区域 -------- */
 .songs_play .play-control {
@@ -320,9 +279,6 @@
 	gap: 16px;
 }
 
-.songs_play .play-setting .setting-blank {
-	display: none;
-}
 
 /* 设置选项容器 */
 .songs_play .play-setting .setting-options {
@@ -752,7 +708,7 @@
 .songInfo-img {
 	width: 120px;
 	height: 120px;
-	margin-bottom: 0;
+	margin-bottom: 4px;
 }
 
 /* 封面图片动画效果 */
@@ -764,7 +720,7 @@
 
 .songInfo-img .img.active {
 	transform: scale(1);
-	animation: playScale .5s ease-in-out forwards;
+	animation: playScale .5s ease-in-out forwards, rotate 20s linear infinite;
 }
 
 /* 封面图片样式 */
@@ -775,6 +731,18 @@
 	border-radius: 50%;
 	border: 1px solid rgba(255, 255, 255, 0.18);
 	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+	/* 添加持续旋转动画 */
+	animation: rotate 20s linear infinite;
+}
+
+/* 旋转动画 */
+@keyframes rotate {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 /* ================ 歌曲信息详细样式 ================ */
@@ -805,10 +773,56 @@
 
 .songInfo-item .song-name {
 	height: 28px;
+	width: 100%;
+	max-width: 100%;
+	overflow: hidden;
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .songInfo-item .name {
 	line-height: 25px;
+	display: inline-block;
+	white-space: nowrap;
+	/* 移除省略号效果，显示完整文本 */
+	overflow: visible !important;
+	text-overflow: clip !important;
+	/* 默认不应用动画，通过JavaScript动态添加 */
+}
+
+/* 覆盖 text-ol 类的省略号样式 */
+.songInfo-item .song-name .name.text-ol {
+	overflow: visible !important;
+	text-overflow: clip !important;
+}
+
+/* 跑马灯效果 - 当文本溢出时应用 */
+.songInfo-item .song-name.marquee {
+	justify-content: flex-start;
+}
+
+.songInfo-item .song-name.marquee .name {
+	animation: marquee 15s linear infinite;
+	padding-right: 30px;
+	/* 创建无缝循环效果 */
+	display: inline-block;
+}
+
+/* 跑马灯动画 - 从右到左滚动，无缝循环 */
+@keyframes marquee {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(calc(-100% - 30px));
+	}
+}
+
+/* 鼠标悬停时暂停动画 */
+.songInfo-item .song-name.marquee:hover .name {
+	animation-play-state: paused;
 }
 
 .songInfo-item .song-author {
