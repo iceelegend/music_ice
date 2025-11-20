@@ -51,28 +51,6 @@
 
                     <!-- 歌曲播放控制面板 -->
                     <div class="song_panel" song-panel>
-                        <!-- 面板顶部选项 -->
-                        <div class="panel-options flex">
-                            <!-- 关闭按钮 -->
-                            <div class="options-close flex">
-                                <span class="close-icon flex" id="close-panel-btn">
-                                    <svg fill="none" stroke="currentColor" class="icon" stroke-width="5"
-                                        stroke-linecap="butt" stroke-linejoin="miter" style="font-size: 30px;">
-                                        <use xlink:href="#icon-down"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                            <!-- 全屏按钮 -->
-                            <div class="options-fullScreen flex">
-                                <span class="fullScreen-icon flex" id="fullscreen-btn">
-                                    <svg fill="none" stroke="currentColor" class="icon" stroke-width="5"
-                                        stroke-linecap="butt" stroke-linejoin="miter" style="font-size: 30px;">
-                                        <use xlink:href="#icon-fullscreen"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                        </div>
-
                         <!-- 面板主要内容 -->
                         <div class="panel-content flex">
                             <!-- 歌曲信息区域 -->
@@ -82,11 +60,9 @@
                                         <img class="img" src="" alt="..." play-imgBorad currentPlay-img400>
                                     </div>
                                     <div class="songInfo-item flex">
-                                        <div class="item-song flex">
-                                            <div class="song-name">
-                                                <span title="" class="name text-ol fs-20 fw-6"
-                                                    currentPlay-name></span>
-                                            </div>
+                                        <div class="song-name">
+                                            <span title="" class="name text-ol fs-20 fw-6"
+                                                currentPlay-name></span>
                                         </div>
                                     </div>
                                 </div>
@@ -117,7 +93,6 @@
                 <!-- 播放控制区域 -->
                 <div class="play-control flex">
                     <div class="control-items flex">
-                        <div class="items-blank"></div>
                         <div class="items-btn flex">
                             <!-- 上一首 -->
                             <div class="btn-prev flex" play-prev-btn id="btn-prev">
@@ -145,7 +120,6 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="items-blank"></div>
                     </div>
 
                     <!-- 进度条控制 -->
@@ -164,31 +138,27 @@
                 <div class="play-setting flex">
                     <div class="setting-options flex">
                         <!-- 循环模式切换 -->
-                        <div class="options-circulationMode flex">
-                            <div class="flex listLoop" play-mode>
-                                <svg class="icon listLoop" style="color: var(--blue-color);">
-                                    <use xlink:href="#icon-liebiaoxunhuan"></use>
-                                </svg>
-                                <svg class="icon randomLoop" style="color: var(--blue-color);">
-                                    <use xlink:href="#icon-suijibofang1"></use>
-                                </svg>
-                                <svg class="icon singleLoop" style="color: var(--blue-color);">
-                                    <use xlink:href="#icon-danquxunhuan1"></use>
-                                </svg>
-                            </div>
+                        <div class="options-circulationMode flex listLoop" play-mode>
+                            <svg class="icon listLoop" style="color: var(--blue-color);">
+                                <use xlink:href="#icon-liebiaoxunhuan"></use>
+                            </svg>
+                            <svg class="icon randomLoop" style="color: var(--blue-color);">
+                                <use xlink:href="#icon-suijibofang1"></use>
+                            </svg>
+                            <svg class="icon singleLoop" style="color: var(--blue-color);">
+                                <use xlink:href="#icon-danquxunhuan1"></use>
+                            </svg>
                         </div>
                         <!-- 音量控制 -->
-                        <div class="options-sound flex">
-                            <div class="flex sound" play-volume-icon>
-                                <svg fill="none" stroke="currentColor" class="icon sound" stroke-width="4"
-                                    stroke-linecap="butt" stroke-linejoin="miter" style="font-size: 20px;">
-                                    <use xlink:href="#icon-volume"></use>
-                                </svg>
-                                <svg fill="none" stroke="currentColor" class="icon mute" stroke-width="4"
-                                    stroke-linecap="butt" stroke-linejoin="miter" style="font-size: 20px;">
-                                    <use xlink:href="#icon-mute"></use>
-                                </svg>
-                            </div>
+                        <div class="options-sound flex sound" play-volume-icon>
+                            <svg fill="none" stroke="currentColor" class="icon sound" stroke-width="4"
+                                stroke-linecap="butt" stroke-linejoin="miter" style="font-size: 20px;">
+                                <use xlink:href="#icon-volume"></use>
+                            </svg>
+                            <svg fill="none" stroke="currentColor" class="icon mute" stroke-width="4"
+                                stroke-linecap="butt" stroke-linejoin="miter" style="font-size: 20px;">
+                                <use xlink:href="#icon-mute"></use>
+                            </svg>
                         </div>
                         <!-- 音量滑块 -->
                         <div class="options-soundSlider flex">
